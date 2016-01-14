@@ -25,31 +25,31 @@
                 var targetElevation;
                 var operatorElevation;
                 var data = [
-                {Tdistance: 100, Tcorrection: 8}, 
-                {Tdistance: 150, Tcorrection: 9}, 
-                {Tdistance: 200, Tcorrection: 16}, 
-                {Tdistance: 250, Tcorrection: 26}, 
-                {Tdistance: 300, Tcorrection: 38}, 
-                {Tdistance: 350, Tcorrection: 50}, 
-                {Tdistance: 400, Tcorrection: 61}, 
-                {Tdistance: 450, Tcorrection: 72}, 
-                {Tdistance: 500, Tcorrection: 82}, 
-                {Tdistance: 550, Tcorrection: 91}, 
-                {Tdistance: 600, Tcorrection: 100}, 
-                {Tdistance: 650, Tcorrection: 109}, 
-                {Tdistance: 700, Tcorrection: 119}, 
-                {Tdistance: 750, Tcorrection: 130}, 
-                {Tdistance: 800, Tcorrection: 141}, 
-                {Tdistance: 850, Tcorrection: 155}, 
-                {Tdistance: 900, Tcorrection: 169}, 
-                {Tdistance: 950, Tcorrection: 185}, 
-                {Tdistance: 1000, Tcorrection: 202}, 
-                {Tdistance: 1050, Tcorrection: 220}, 
-                {Tdistance: 1100, Tcorrection: 239}, 
-                {Tdistance: 1150, Tcorrection: 257}, 
-                {Tdistance: 1200, Tcorrection: 276}, 
-                {Tdistance: 1250, Tcorrection: 295}, 
-                {Tdistance: 1300, Tcorrection: 314}, 
+                {Tdistance: 100, Tcorrection: 8},
+                {Tdistance: 150, Tcorrection: 9},
+                {Tdistance: 200, Tcorrection: 16},
+                {Tdistance: 250, Tcorrection: 26},
+                {Tdistance: 300, Tcorrection: 38},
+                {Tdistance: 350, Tcorrection: 50},
+                {Tdistance: 400, Tcorrection: 61},
+                {Tdistance: 450, Tcorrection: 72},
+                {Tdistance: 500, Tcorrection: 82},
+                {Tdistance: 550, Tcorrection: 91},
+                {Tdistance: 600, Tcorrection: 100},
+                {Tdistance: 650, Tcorrection: 109},
+                {Tdistance: 700, Tcorrection: 119},
+                {Tdistance: 750, Tcorrection: 130},
+                {Tdistance: 800, Tcorrection: 141},
+                {Tdistance: 850, Tcorrection: 155},
+                {Tdistance: 900, Tcorrection: 169},
+                {Tdistance: 950, Tcorrection: 185},
+                {Tdistance: 1000, Tcorrection: 202},
+                {Tdistance: 1050, Tcorrection: 220},
+                {Tdistance: 1100, Tcorrection: 239},
+                {Tdistance: 1150, Tcorrection: 257},
+                {Tdistance: 1200, Tcorrection: 276},
+                {Tdistance: 1250, Tcorrection: 295},
+                {Tdistance: 1300, Tcorrection: 314},
                 {Tdistance: 1350, Tcorrection: 333},
                 {Tdistance: 1400, Tcorrection: 354},
                 {Tdistance: 1450, Tcorrection: 378},
@@ -90,7 +90,7 @@
                 function elevation(distance, targetElevation, operatorElevation, correction)
                 {
                     if (targetElevation > operatorElevation) {
-                    var result = correction - (1000*(targetElevation - operatorElevation)/distance);
+                    var result = correction + (1000*(targetElevation - operatorElevation)/distance);
                     }
                     else {
                         var result = correction + (1000*(targetElevation - operatorElevation)/distance);
@@ -99,6 +99,6 @@
                 }
 //////////////////////////////////////////////////////////////////////////////////////
 
-        </script>        
+        </script>
     </body>
 </html>
