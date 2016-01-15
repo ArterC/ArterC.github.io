@@ -23,14 +23,13 @@
     <br>
     <input type="number" name="targetElevation">
     <br>
+    Способ ведения огня:
     <br>
-    <input type="radio" name="mode" value="Обычный" checked="checked"> Обычный
+    <input type="radio" name="mode" value="direct" checked="checked"> Прямой
     <br>
-    <input type="radio" name="mode" value="Навес"> Навес
-    <br>
+    <input type="radio" name="mode" value="indirect"> Навесной
     <br>
     <input type="submit" onclick="return calculate()" value="Рассчитать поправку">
-    <br>
     <br>
   </form>
   Поправка:
@@ -145,7 +144,7 @@
         Tdistance: 1700,
         Tcorrection: 648
       }, ];
-      var datac = [{
+      var dataInd = [{
         Tdistance: 1100,
         Tcorrection: 1224
       }, {
@@ -189,14 +188,20 @@
       var operatorElevation = document.forms["input"]["operatorElevation"].value;
       var targetElevation = document.forms["input"]["targetElevation"].value;
       if (distance <= 1700 && distance != "" && distance >= 0) {
-        if (document.forms["input"]["mode"].value == "Обычный") {
+        if (document.forms["input"]["mode"].value == "direct") {
           result = getNearest(data, distance);
           var output = elevation(distance, targetElevation, operatorElevation, result.Tcorrection);
+          document.getElementById("result").innerHTML = output;
+          console.log("Direct");
+        } else if (distance >= 1100) {
+          result = getNearestInd(dataInd, distance);
+          var output = elevationInd(distance, targetElevation, operatorElevation, result.Tcorrection);
+          document.getElementById("result").innerHTML = output;
+          console.log("dist >= 1100");
         } else {
-          result = getNearest2(datac, distance);
-          var output = elevation2(distance, targetElevation, operatorElevation, result.Tcorrection);
+          document.getElementById("result").innerHTML = "Невозможно поразить цель (дистанция вне диапазона 1100 - 1700)";
+          console.log("1100-1700");
         }
-        document.getElementById("result").innerHTML = output;
       } else if (distance > 1700) {
         document.getElementById("result").innerHTML = "Невозможно поразить цель (дистанция больше 1700м)";
       } else if (distance < 0) {
@@ -226,7 +231,7 @@
       return null;
     }
 
-    function getNearest2(array, value) {
+    function getNearestInd(array, value) {
       var closest, difference, lastDifference = null;
       for (var i = 0; i < array.length; i++) {
         difference = Math.abs(array[i].Tdistance - value);
@@ -253,7 +258,7 @@
       }
     }
 
-    function elevation2(distance, targetElevation, operatorElevation, correction) {
+    function elevationInd(distance, targetElevation, operatorElevation, correction) {
       var result = correction - (1000 * (targetElevation - operatorElevation) / distance);
       if (result >= 0 && result < 1225) {
         var solution = ("000" + result.toFixed(0)).slice(-4);
