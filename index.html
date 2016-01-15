@@ -24,11 +24,16 @@
     <input type="number" name="targetElevation">
     <br>
     <br>
+    <input type="radio" name="mode" value="Обычный" checked="checked"> Обычный
+    <br>
+    <input type="radio" name="mode" value="Навес"> Навес
+    <br>
+    <br>
     <input type="submit" onclick="return calculate()" value="Рассчитать поправку">
     <br>
     <br>
   </form>
-    Поправка:
+  Поправка:
   <b>
   <div id=result>
   </div>
@@ -140,16 +145,65 @@
         Tdistance: 1700,
         Tcorrection: 648
       }, ];
+      var datac = [{
+        Tdistance: 1100,
+        Tcorrection: 1224
+      }, {
+        Tdistance: 1150,
+        Tcorrection: 1180
+      }, {
+        Tdistance: 1200,
+        Tcorrection: 1136
+      }, {
+        Tdistance: 1250,
+        Tcorrection: 1095
+      }, {
+        Tdistance: 1300,
+        Tcorrection: 1054
+      }, {
+        Tdistance: 1350,
+        Tcorrection: 1014
+      }, {
+        Tdistance: 1400,
+        Tcorrection: 973
+      }, {
+        Tdistance: 1450,
+        Tcorrection: 932
+      }, {
+        Tdistance: 1500,
+        Tcorrection: 890
+      }, {
+        Tdistance: 1550,
+        Tcorrection: 848
+      }, {
+        Tdistance: 1600,
+        Tcorrection: 807
+      }, {
+        Tdistance: 1650,
+        Tcorrection: 766
+      }, {
+        Tdistance: 1700,
+        Tcorrection: 721
+      }, ];
       var distance = document.forms["input"]["distance"].value;
       var operatorElevation = document.forms["input"]["operatorElevation"].value;
       var targetElevation = document.forms["input"]["targetElevation"].value;
-      if (distance <= 1700)
-      {
-      result = getNearest(data, distance);
-      var output = elevation(distance, targetElevation, operatorElevation, result.Tcorrection);
-      document.getElementById("result").innerHTML = output;
+      if (distance <= 1700 && distance != "" && distance >= 0) {
+        if (document.forms["input"]["mode"].value == "Обычный") {
+          result = getNearest(data, distance);
+          var output = elevation(distance, targetElevation, operatorElevation, result.Tcorrection);
+        } else {
+          result = getNearest2(datac, distance);
+          var output = elevation2(distance, targetElevation, operatorElevation, result.Tcorrection);
+        }
+        document.getElementById("result").innerHTML = output;
+      } else if (distance > 1700) {
+        document.getElementById("result").innerHTML = "Невозможно поразить цель (дистанция больше 1700м)";
+      } else if (distance < 0) {
+        document.getElementById("result").innerHTML = "Ошибка: дистанция не может быть отрицательным числом";
+      } else {
+        document.getElementById("result").innerHTML = "Ошибка: нет входных данных";
       }
-      else {document.getElementById("result").innerHTML = "Невозможно поразить цель (дистанция больше 1700м)";}
       return false;
     }
 
@@ -162,8 +216,23 @@
         difference = Math.abs(array[i].Tdistance - value);
         if (value > 1675) {
           return array[32];
+        } else if (lastDifference === null || difference < lastDifference) {
+          closest = i;
+          lastDifference = difference;
+        } else {
+          return array[closest];
         }
-        else if (lastDifference === null || difference < lastDifference) {
+      }
+      return null;
+    }
+
+    function getNearest2(array, value) {
+      var closest, difference, lastDifference = null;
+      for (var i = 0; i < array.length; i++) {
+        difference = Math.abs(array[i].Tdistance - value);
+        if (value > 1675) {
+          return array[12];
+        } else if (lastDifference === null || difference < lastDifference) {
           closest = i;
           lastDifference = difference;
         } else {
@@ -179,9 +248,18 @@
         var solution = ("000" + result.toFixed(0)).slice(-4);
         var output = (solution.substr(0, 2) + '-' + solution.substr(2));
         return output;
+      } else {
+        return ("Невозможно поразить цель (экстремальные углы обстрела)");
       }
-      else
-      {
+    }
+
+    function elevation2(distance, targetElevation, operatorElevation, correction) {
+      var result = correction - (1000 * (targetElevation - operatorElevation) / distance);
+      if (result >= 0 && result < 1225) {
+        var solution = ("000" + result.toFixed(0)).slice(-4);
+        var output = (solution.substr(0, 2) + '-' + solution.substr(2));
+        return output;
+      } else {
         return ("Невозможно поразить цель (экстремальные углы обстрела)");
       }
     }
