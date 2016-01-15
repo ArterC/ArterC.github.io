@@ -28,7 +28,7 @@
     <br>
     <br>
   </form>
-    Поправка:
+  Поправка:
   <b>
   <div id=result>
   </div>
@@ -143,13 +143,13 @@
       var distance = document.forms["input"]["distance"].value;
       var operatorElevation = document.forms["input"]["operatorElevation"].value;
       var targetElevation = document.forms["input"]["targetElevation"].value;
-      if (distance <= 1700)
-      {
-      result = getNearest(data, distance);
-      var output = elevation(distance, targetElevation, operatorElevation, result.Tcorrection);
-      document.getElementById("result").innerHTML = output;
+      if (distance <= 1700) {
+        result = getNearest(data, distance);
+        var output = elevation(distance, targetElevation, operatorElevation, result.Tcorrection);
+        document.getElementById("result").innerHTML = output;
+      } else {
+        document.getElementById("result").innerHTML = "Невозможно поразить цель (дистанция больше 1700м)";
       }
-      else {document.getElementById("result").innerHTML = "Невозможно поразить цель (дистанция больше 1700м)";}
       return false;
     }
 
@@ -162,8 +162,7 @@
         difference = Math.abs(array[i].Tdistance - value);
         if (value > 1675) {
           return array[32];
-        }
-        else if (lastDifference === null || difference < lastDifference) {
+        } else if (lastDifference === null || difference < lastDifference) {
           closest = i;
           lastDifference = difference;
         } else {
@@ -179,9 +178,10 @@
         var solution = ("000" + result.toFixed(0)).slice(-4);
         var output = (solution.substr(0, 2) + '-' + solution.substr(2));
         return output;
+      else if(distance == null || targetElevation == null || operatorElevation == null) {
+        return ("Нет данных на входе");
       }
-      else
-      {
+      } else {
         return ("Невозможно поразить цель (экстремальные углы обстрела)");
       }
     }
