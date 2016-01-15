@@ -15,23 +15,27 @@
   <form id="input">
     Дистанция до цели:
     <br>
-    <input type="text" name="distance">
+    <input type="number" name="distance">
     <br> Высота вашей позиции:
     <br>
-    <input type="text" name="operatorElevation">
+    <input type="number" name="operatorElevation">
     <br> Высота позиции противника:
     <br>
-    <input type="text" name="targetElevation">
+    <input type="number" name="targetElevation">
     <br>
     <br>
     <input type="submit" onclick="return calculate()" value="Рассчитать поправку">
     <br>
+    <br>
   </form>
+    Поправка:
+  <b>
   <div id=result>
   </div>
+  </b>
   <script>
     function calculate() {
-      var distance = 200;
+      var distance;
       var correction;
       var result;
       var targetElevation;
@@ -139,21 +143,27 @@
       var distance = document.forms["input"]["distance"].value;
       var operatorElevation = document.forms["input"]["operatorElevation"].value;
       var targetElevation = document.forms["input"]["targetElevation"].value;
+      if (distance <= 1700)
+      {
       result = getNearest(data, distance);
       var output = elevation(distance, targetElevation, operatorElevation, result.Tcorrection);
       document.getElementById("result").innerHTML = output;
+      }
+      else {document.getElementById("result").innerHTML = "Невозможно поразить цель (дистанция больше 1700м)";}
       return false;
     }
+
     //correction. = (667 - 0.233719 * Math.sqrt(10361381.5881 - Math.pow(distance+1488.91 , 2)));
     //Expression above doesnt work, will use ingame table instead
-    //////////////////////////////////////////////////////////////////////////////////////
+
     function getNearest(array, value) {
       var closest, difference, lastDifference = null;
       for (var i = 0; i < array.length; i++) {
         difference = Math.abs(array[i].Tdistance - value);
         if (value > 1675) {
           return array[32];
-        } else if (lastDifference === null || difference < lastDifference) {
+        }
+        else if (lastDifference === null || difference < lastDifference) {
           closest = i;
           lastDifference = difference;
         } else {
@@ -164,14 +174,17 @@
     }
 
     function elevation(distance, targetElevation, operatorElevation, correction) {
-      if (targetElevation > operatorElevation) {
-        var result = correction + (1000 * (targetElevation - operatorElevation) / distance);
-      } else {
-        var result = correction + (1000 * (targetElevation - operatorElevation) / distance);
+      var result = correction + (1000 * (targetElevation - operatorElevation) / distance);
+      if (result >= 0 && result < 1224) {
+        var solution = ("000" + result.toFixed(0)).slice(-4);
+        var output = (solution.substr(0, 2) + '-' + solution.substr(2));
+        return output;
       }
-      return result;
+      else
+      {
+        return ("Невозможно поразить цель (экстремальные углы обстрела)");
+      }
     }
-    //////////////////////////////////////////////////////////////////////////////////////
   </script>
 </body>
 
