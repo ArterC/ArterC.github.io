@@ -22,8 +22,7 @@
     <br> Высота позиции противника:
     <br>
     <input type="number" name="targetElevation">
-    <br>
-    Способ ведения огня:
+    <br> Способ ведения огня:
     <br>
     <input type="radio" name="mode" value="direct" checked="checked"> Прямой (100-1700)
     <br>
@@ -34,7 +33,7 @@
   </form>
   Поправка:
   <b>
-  <div id=result>
+  <div id="result">
   </div>
   </b>
   <script>
@@ -44,6 +43,7 @@
       var result;
       var targetElevation;
       var operatorElevation;
+      var mode = 0;
       var data = [{
         Tdistance: 100,
         Tcorrection: 8
@@ -189,18 +189,17 @@
       var targetElevation = document.forms["input"]["targetElevation"].value;
       if (distance <= 1700 && distance != "" && distance >= 0) {
         if (document.forms["input"]["mode"].value == "direct") {
-          result = getNearest(data, distance);
-          var output = elevation(distance, targetElevation, operatorElevation, result.Tcorrection);
+          mode = 0;
+          result = getDistCor(mode, data, distance);
+          var output = elevation(mode, distance, targetElevation, operatorElevation, result);
           document.getElementById("result").innerHTML = output;
-          console.log("Direct");
         } else if (distance >= 1100) {
-          result = getNearestInd(dataInd, distance);
-          var output = elevationInd(distance, targetElevation, operatorElevation, result.Tcorrection);
+          mode = 1;
+          result = getDistCor(mode, dataInd, distance);
+          var output = elevation(mode, distance, targetElevation, operatorElevation, result);
           document.getElementById("result").innerHTML = output;
-          console.log("dist >= 1100");
         } else {
           document.getElementById("result").innerHTML = "Невозможно поразить цель (дистанция вне диапазона 1100 - 1700)";
-          console.log("1100-1700");
         }
       } else if (distance > 1700) {
         document.getElementById("result").innerHTML = "Невозможно поразить цель (дистанция больше 1700м)";
@@ -212,55 +211,35 @@
       return false;
     }
 
-    //correction. = (667 - 0.233719 * Math.sqrt(10361381.5881 - Math.pow(distance+1488.91 , 2)));
-    //Expression above doesnt work, will use ingame table instead
-
-    function getNearest(array, value) {
-      var closest, difference, lastDifference = null;
+    //RETURNS DISTANCE CORRECTION
+    function getDistCor(mode, array, distance) {
+      var closest, difference, result = null;
       for (var i = 0; i < array.length; i++) {
-        difference = Math.abs(array[i].Tdistance - value);
-        if (value > 1675) {
-          return array[32];
-        } else if (lastDifference === null || difference < lastDifference) {
-          closest = i;
-          lastDifference = difference;
-        } else {
-          return array[closest];
+        difference = array[i].Tdistance - distance;
+        if (distance < array[0].Tdistance) {
+          return array[0].Tcorrection;
+        } else if (difference == 0) {
+          return array[i].Tcorrection;
+        } else if (difference < 50 && difference > 0) {
+          if (mode == 0) {
+            result = array[i - 1].Tcorrection + ((Math.abs(array[i - 1].Tcorrection - array[i].Tcorrection) / Math.abs(array[i - 1].Tdistance - array[i].Tdistance)) * Math.abs(distance - array[i - 1].Tdistance));
+          } else {
+            result = array[i - 1].Tcorrection - ((Math.abs(array[i - 1].Tcorrection - array[i].Tcorrection) / Math.abs(array[i - 1].Tdistance - array[i].Tdistance)) * Math.abs(distance - array[i - 1].Tdistance));
+          }
+          return result;
         }
       }
       return null;
     }
 
-    function getNearestInd(array, value) {
-      var closest, difference, lastDifference = null;
-      for (var i = 0; i < array.length; i++) {
-        difference = Math.abs(array[i].Tdistance - value);
-        if (value > 1675) {
-          return array[12];
-        } else if (lastDifference === null || difference < lastDifference) {
-          closest = i;
-          lastDifference = difference;
-        } else {
-          return array[closest];
-        }
-      }
-      return null;
-    }
-
-    function elevation(distance, targetElevation, operatorElevation, correction) {
-      var result = correction + (1000 * (targetElevation - operatorElevation) / distance);
-      if (result >= 0 && result < 1224) {
-        var solution = ("000" + result.toFixed(0)).slice(-4);
-        var output = (solution.substr(0, 2) + '-' + solution.substr(2));
-        return output;
+    //RETURNS COMPLETE SOLUTION WITH FORMATTING
+    function elevation(mode, distance, targetElevation, operatorElevation, correction) {
+      if (mode == 0) {
+        var result = correction + (1000 * (targetElevation - operatorElevation) / distance);
       } else {
-        return ("Невозможно поразить цель (экстремальные углы обстрела)");
+        var result = correction - (1000 * (targetElevation - operatorElevation) / distance);
       }
-    }
-
-    function elevationInd(distance, targetElevation, operatorElevation, correction) {
-      var result = correction - (1000 * (targetElevation - operatorElevation) / distance);
-      if (result >= 0 && result < 1225) {
+      if (result >= 0 && result <= 1224) {
         var solution = ("000" + result.toFixed(0)).slice(-4);
         var output = (solution.substr(0, 2) + '-' + solution.substr(2));
         return output;
@@ -269,6 +248,9 @@
       }
     }
   </script>
+
+
+
 </body>
 
 </html>
