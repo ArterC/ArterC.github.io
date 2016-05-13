@@ -63,9 +63,10 @@
 		{
 			var smax = 10;
 			var smin = 0.1;
-			if (freq + (smax*shiftA) > max)
+			if ((freq + (smax*shiftA)) > max)
 			{
-				smax = Math.floor( (smax / shiftA) * 10 ) / 10;
+				smax = Math.floor( ((max-freq) / shiftA) * 10 ) / 10;
+				console.log(smax);
 			}
 			return shift = Math.floor((Math.random() * (smax - smin) + smin)*10)/10;
 		}
