@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Frequency generator</title>
+    <script>
+		var min = 30;
+		var max = 87;
+		var shiftA = 2;
+		var array = new Array();
+		var freq;
+		var shift;
+		function check()
+		{
+			var ok;
+			// CHECK FOR MATCHES
+			do {
+				freq = genFreq();
+				shift = genShift(freq);
+				ok = true;
+				for (i = 0; i < array.length; i++)
+				{
+					if ((freq == array[i]))
+					{
+						ok = false;
+						break;
+					}
+				}
+			}
+			while (ok == false);
+			// PUSH ITEMS TO ARRAY
+			for (i = 0; i < (shiftA + 1); i++) 
+			{ 
+				array.push (freq + (shift * shiftA));
+			}
+		}
+		
+		function getFreq() 
+		{
+			var output;
+			
+			check();
+			output = "Б дв " + freq + " c+" + shift;
+			document.getElementById("BDV").value = output;
+			
+			check();
+			output = "Б1 кв " + freq + " c+" + shift;
+			document.getElementById("B1").value = output;
+			
+			check();
+			output = "Б2 кв " + freq + " c+" + shift;
+			document.getElementById("B2").value = output;
+			
+			check();
+			output = "Б3 кв " + freq + " c+" + shift;
+			document.getElementById("B3").value = output;
+		}
+		function genFreq()
+		{
+			return freq = Math.floor((Math.random() * (max - min) + min)*10)/10;	
+		}
+		function genShift()
+		{
+			var smax = 10;
+			var smin = 0.1;
+			if (freq + (smax*shiftA) > max)
+			{
+				smax = Math.floor( (smax / shiftA) * 10 ) / 10;
+			}
+			return shift = Math.floor((Math.random() * (smax - smin) + smin)*10)/10;
+		}
+	</script>
+  </head>
+  <body>
+		<input type="text" id="BDV">
+		<br>
+		<input type="text" id="B1">
+		<br>
+		<input type="text" id="B2">
+		<br>
+		<input type="text" id="B3">
+		<br>
+		<button onclick="getFreq()">Получить частоты</button>
+		<br>
+  </body>
+</html>
