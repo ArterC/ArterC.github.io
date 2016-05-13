@@ -30,8 +30,8 @@
 			while (ok == false);
 			// PUSH ITEMS TO ARRAY
 			for (i = 0; i < (shiftA + 1); i++) 
-			{ 
-				array.push (freq + (shift * i));
+			{			
+				array.push (Math.round( (freq + (shift * i)) * 10) / 10);
 			}
 		}
 		
@@ -54,6 +54,7 @@
 			check();
 			output = "Б3 кв " + freq + " c+" + shift;
 			document.getElementById("B3").value = output;
+			array.length = 0;
 		}
 		function genFreq()
 		{
@@ -66,7 +67,6 @@
 			if ((freq + (smax*shiftA)) > max)
 			{
 				smax = Math.floor( ((max-freq) / shiftA) * 10 ) / 10;
-				console.log(smax);
 			}
 			return shift = Math.floor((Math.random() * (smax - smin) + smin)*10)/10;
 		}
