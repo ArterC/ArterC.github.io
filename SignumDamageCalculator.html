@@ -24,14 +24,6 @@
       <br>
       <input type="number" name="rerollAttackDice">
       <br>
-      Защита:
-      <br>
-      <input type="number" name="defenseDice">
-      <br> 
-      Мастер защиты:
-      <br>
-      <input type="number" name="rerollDefenseDice">
-      <br>  
       Бой:
       <br>
       <input type="radio" name="mode" value="melee" checked="checked"> Ближний бой
@@ -61,13 +53,6 @@
       var mode = document.forms["input"]["mode"].value;
       let attackResult = calculateAttackDamage(mode, dice, master);
       document.getElementById("attackResult").innerHTML = attackResult;
-
-      let defenseResult = calculateExpectedDamage(dice, master, 0.33, 0.66);
-      dice = parseInt(document.forms["input"]["defenseDice"].value);
-      master = parseInt(document.forms["input"]["rerollDefenseDice"].value);
-      document.getElementById("defenseResult").innerHTML = defenseResult;
-
-      document.getElementById("finalResult").innerHTML = attackResult - defenseResult;
     }
 
     function calculateAttackDamage(mode, inputDiceAmount, inputRerollDiceAmount) {
