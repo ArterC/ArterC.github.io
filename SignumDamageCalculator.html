@@ -15,12 +15,20 @@
   <form id="input">
       Сила/выстрел:
       <br>
-      <input type="number" name="dice">
+      <input type="number" name="attackDice">
       <br> 
       Мастер атаки/стрельбы:
       <br>
-      <input type="number" name="master">
+      <input type="number" name="rerollAttackDice">
+      <br>
+      Защита:
+      <br>
+      <input type="number" name="defenseDice">
       <br> 
+      Мастер защиты:
+      <br>
+      <input type="number" name="rerollDefenseDice">
+      <br>  
       Бой:
       <br>
       <input type="radio" name="mode" value="melee" checked="checked"> Ближний бой
@@ -29,101 +37,55 @@
       <br>
       <input type="submit" onclick="calculate(); return false;" value="Рассчитать">
       <br>
+      Средний урон атаки:
+      <b>
+        <div id="attackResult"></div>
+      </b>
+      Средний блокированный урон:
+      <b>
+        <div id="defenseResult"></div>
+      </b>
+      Итоговый урон:
+      <b>
+        <div id="finalResult"></div>
+      </b>
     </form>
-    Средний урон:
-    <b>
-      <div id="result"></div>
-    </b>
 
   <script>
     function calculate() {
-      var dice = parseInt(document.forms["input"]["dice"].value);
-      var master = parseInt(document.forms["input"]["master"].value);
+      var dice = parseInt(document.forms["input"]["attackDice"].value);
+      var master = parseInt(document.forms["input"]["rerollAttackDice"].value);
       var mode = document.forms["input"]["mode"].value;
-      document.getElementById("result").innerHTML = calculateAttackDamage(mode, dice, master);
+      let attackResult = calculateAttackDamage(mode, dice, master);
+      document.getElementById("attackResult").innerHTML = attackResult;
+
+      let defenseResult = calculateExpectedDamage(dice, master, 0.33, 0.66);
+      dice = parseInt(document.forms["input"]["defenseDice"].value);
+      master = parseInt(document.forms["input"]["rerollDefenseDice"].value);
+      document.getElementById("defenseResult").innerHTML = defenseResult;
+
+      document.getElementById("finalResult").innerHTML = attackResult - defenseResult;
     }
 
     function calculateAttackDamage(mode, inputDiceAmount, inputRerollDiceAmount) {
       //var expectedDamage = 0.00;
+      let successfulRollProbability = 0;
+      let failedRollProbability = 0;
       switch (mode) {
         case "melee":
-          var successfulRollProbability = 0.66;
-          var failedRollProbability = 0.33;
+          successfulRollProbability = 0.66;
+          failedRollProbability = 0.33;
           break;
       
         case "ranged":
-          var successfulRollProbability = 0.33;
-          var failedRollProbability = 0.66;
+          successfulRollProbability = 0.33;
+          failedRollProbability = 0.66;
           break;
         
         default:
           return 0;
       }
-
-      let outcomes = [0.33, 0.66];
-      var result = generateCombinations(inputDiceAmount, outcomes);
-
-      //PART 2 - Add rerolls
-      let rerollTimes = 0;
-      let finalCombinations = [];
-      let rerollCombinations = [];
-
-      result.forEach(combination => {
-        console.log("basic combination = " + combination);
-        let basicSuccessfulRolls = 0;
-        let basicFailedRolls = 0;
-        //Count successful and failed rolls
-        combination.forEach(dieOutcome => {
-          if(dieOutcome == successfulRollProbability) {
-            basicSuccessfulRolls++;
-          } else {
-            basicFailedRolls++;
-          }
-        });
-
-        //Count reroll times FIX THIS
-        if(basicFailedRolls >= inputRerollDiceAmount) {
-          rerollTimes = inputRerollDiceAmount;
-        } else if (basicFailedRolls < inputRerollDiceAmount) {
-          rerollTimes = basicFailedRolls;
-        }
-
-
-        rerollCombinations = generateCombinations(rerollTimes, [0.33, 0.66]);
-        rerollCombinations.forEach(rerollCombination => {
-          //copy basic combination
-          let finalCombination = Array.from(combination);
-          rerollCombination.forEach(rerollDieResult => {
-            //add reroll combination to basic combination
-            finalCombination.push(rerollDieResult);
-          });
-          //console.log(finalCombination);
-          finalCombinations.push(finalCombination);
-        });
-      });
-
-      //PART 3 - Calculate probabilities
-      let probabilitiesByDamage = new Array(inputDiceAmount+1);
-      //fill array with 1
-      probabilitiesByDamage.fill(0, 0, inputDiceAmount+1);
-      finalCombinations.forEach(combination => {
-        console.log(combination);
-        let damage = countDamage(combination, successfulRollProbability);
-        let probability = 1;
-        combination.forEach(dieResult => {
-          probability = probability * dieResult;
-        });
-        probabilitiesByDamage[damage] += probability;
-        console.log(probability);
-      });
-      console.log(probabilitiesByDamage);
-      //PART 4 - Calculate damage
-      let expectedDamage = 0;
-      for (let i = 0; i < probabilitiesByDamage.length; i++) {
-        expectedDamage += i*probabilitiesByDamage[i];
-      }
-      console.log(expectedDamage);
-      return expectedDamage;
+      return calculateExpectedDamage(inputDiceAmount, inputRerollDiceAmount, successfulRollProbability, failedRollProbability);
     }
 
     function generateCombinations(diceAmount, outcomes) {
@@ -208,6 +170,73 @@
       } else {
         return true;
       }
+    }
+
+    function calculateExpectedDamage(basicDiceAmount, rerollDiceAmount, successfulRollProbability, failedRollProbability) {
+      let outcomes = [successfulRollProbability, failedRollProbability];
+      var result = generateCombinations(basicDiceAmount, outcomes);
+
+      //PART 2 - Add rerolls
+      let rerollTimes = 0;
+      let finalCombinations = [];
+      let rerollCombinations = [];
+
+      result.forEach(combination => {
+        console.log("basic combination = " + combination);
+        let basicSuccessfulRolls = 0;
+        let basicFailedRolls = 0;
+        //Count successful and failed rolls
+        combination.forEach(dieOutcome => {
+          if(dieOutcome == successfulRollProbability) {
+            basicSuccessfulRolls++;
+          } else {
+            basicFailedRolls++;
+          }
+        });
+
+        //Count reroll times FIX THIS
+        if(basicFailedRolls >= rerollDiceAmount) {
+          rerollTimes = rerollDiceAmount;
+        } else if (basicFailedRolls < rerollDiceAmount) {
+          rerollTimes = basicFailedRolls;
+        }
+
+
+        rerollCombinations = generateCombinations(rerollTimes, outcomes);
+        rerollCombinations.forEach(rerollCombination => {
+          //copy basic combination
+          let finalCombination = Array.from(combination);
+          rerollCombination.forEach(rerollDieResult => {
+            //add reroll combination to basic combination
+            finalCombination.push(rerollDieResult);
+          });
+          //console.log(finalCombination);
+          finalCombinations.push(finalCombination);
+        });
+      });
+
+      //PART 3 - Calculate probabilities
+      let probabilitiesByDamage = new Array(basicDiceAmount+1);
+      //fill array with 1
+      probabilitiesByDamage.fill(0, 0, basicDiceAmount+1);
+      finalCombinations.forEach(combination => {
+        console.log(combination);
+        let damage = countDamage(combination, successfulRollProbability);
+        let probability = 1;
+        combination.forEach(dieResult => {
+          probability = probability * dieResult;
+        });
+        probabilitiesByDamage[damage] += probability;
+        console.log(probability);
+      });
+      console.log(probabilitiesByDamage);
+      //PART 4 - Calculate damage
+      let expectedDamage = 0;
+      for (let i = 0; i < probabilitiesByDamage.length; i++) {
+        expectedDamage += i*probabilitiesByDamage[i];
+      }
+      console.log(expectedDamage);
+      return expectedDamage;
     }
   </script>
 
