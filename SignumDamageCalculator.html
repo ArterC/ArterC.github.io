@@ -36,7 +36,7 @@
       <br>
       <input type="radio" name="mode" value="melee" checked="checked"> Ближний бой (Стойкий)
       <br>
-      <input type="radio" name="mode" value="melee_damaged" checked="checked"> Ближний бой (Не стойкий)
+      <input type="radio" name="mode" value="melee_damaged"> Ближний бой (Не стойкий)
       <br>
       <input type="radio" name="mode" value="ranged"> Стрельба
       <br>
@@ -142,6 +142,9 @@
             });
             combos.push(comb);
           });
+          if(successes == 0) {
+            combos.push(combination);
+          }
         });
       }
       //Part 4 - Calculate probabilities by damage
