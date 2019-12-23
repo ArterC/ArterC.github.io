@@ -104,25 +104,39 @@
       let outcomes = [successfulRollProbability, failedRollProbability];
       //Part 1 - Generate basic combinations
       var result = generateCombinations(attackDiceAmount, outcomes);
+      let combinations = [];
+      result.forEach(element => {
+        let combination = new Combination();
+        combination.attack = Array.from(element);
+        combinations.push(combination);
+      });
+      
       //Part 2 - Add rerolls
-      var finalCombinations = addRerolls(result, successfulRollProbability, failedRollProbability, rerollDiceAmount, outcomes);
+      var finalCombinations = addRerolls(combinations, successfulRollProbability, failedRollProbability, rerollDiceAmount, outcomes, "attack");
+      
       //Part 3 - Add defense
-      combos = [] //or combos = new Array(2);
+      combos = [];
       if(mode == "melee" || mode == "melee_damaged") {
         let defenseCombinations = generateCombinations(defenseDiceAmount, outcomes);
-        let defenseCombinationsWithRerolls = addRerolls(defenseCombinations, 0.33, 0.66, defenseMaster, outcomes);
+        combinations = [];
+        defenseCombinations.forEach(element => {
+          let combination = new Combination();
+          combination.defense = Array.from(element);
+          combinations.push(combination);
+        });
+        let defenseCombinationsWithRerolls = addRerolls(combinations, 0.33, 0.66, defenseMaster, outcomes, "defense");
         for(var i = 0; i < finalCombinations.length; i++)
         {
           for(var j = 0; j < defenseCombinationsWithRerolls.length; j++)
           {
-            let combination = [];
-            finalCombinations[i].forEach(element => {
-              combination.push(element);
-            });
-            defenseCombinationsWithRerolls[j].forEach(element => {
-              combination.push(element);
-            });
-            combos.push(Array.from(combination));
+            let attackCombination = finalCombinations[i];
+            let defenseCombination = defenseCombinationsWithRerolls[j];
+            let combination = new Combination();
+            combination.attack = attackCombination.attack;
+            combination.attackRerolls = attackCombination.attackRerolls;
+            combination.defense = defenseCombination.defense;
+            combination.defenseRerolls = defenseCombination.defenseRerolls;
+            combos.push(combination);
           }
         }
         if(defenseCombinationsWithRerolls.length == 0) {
@@ -133,13 +147,12 @@
       }
       else if(mode == "ranged" || mode == "throwing") {
         finalCombinations.forEach(combination => {
-          let successes = countDamage(combination, successfulRollProbability);
+          let successes = combination.countDamage(successfulRollProbability);
           let defenseCombinations = generateCombinations(successes, outcomes);
+          combinations = [];
           defenseCombinations.forEach(defenseCombination => {
-            let comb = Array.from(combination);
-            defenseCombination.forEach(element => {
-              comb.push(element);
-            });
+            let comb = combination.copy();
+            comb.defense = defenseCombination;
             combos.push(comb);
           });
           if(successes == 0) {
@@ -147,8 +160,9 @@
           }
         });
       }
+      
       //Part 4 - Calculate probabilities by damage
-      let probabilitiesByDamage = calculateProbabilitiesByDamage(attackDiceAmount, defenseDiceAmount, combos, successfulRollProbability);
+      let probabilitiesByDamage = calculateProbabilitiesByDamage(combos, successfulRollProbability);
       //Part 5 - Calculate expected damage
       let expectedDamage = calcExpDamage(probabilitiesByDamage);
 
@@ -163,18 +177,30 @@
       return expectedDamage;
     }
 
-    function addRerolls(result, successfulRollProbability, failedRollProbability, rerollDiceAmount, outcomes) {
+    function addRerolls(result, successfulRollProbability, failedRollProbability, rerollDiceAmount, outcomes, arrayName) {
       //PART 2 - Add rerolls to basic combinations
       let rerollTimes = 0;
       let finalCombinations = [];
       let rerollCombinations = [];
 
       result.forEach(combination => {
-        console.log("basic combination = " + combination);
         let basicSuccessfulRolls = 0;
         let basicFailedRolls = 0;
         //Count successful and failed rolls
-        combination.forEach(dieOutcome => {
+        let array;
+        switch (arrayName) {
+          case "attack":
+            array = combination.attack;
+            break;
+
+          case "defense":
+            array = combination.defense;
+            break;
+            
+          default:
+            return result;
+        }
+        array.forEach(dieOutcome => {
           if(dieOutcome == successfulRollProbability) {
             basicSuccessfulRolls++;
           } else {
@@ -191,19 +217,31 @@
 
         rerollCombinations = generateCombinations(rerollTimes, outcomes);
         rerollCombinations.forEach(rerollCombination => {
-          //copy basic combination
-          let finalCombination = Array.from(combination);
+          let newCombination = combination.copy();
+          finalCombinations.push(newCombination);
+          let finalCombination = [];
           rerollCombination.forEach(rerollDieResult => {
             //add reroll combination to basic combination
             finalCombination.push(rerollDieResult);
           });
-          //console.log(finalCombination);
-          finalCombinations.push(finalCombination);
+
+          switch (arrayName) {
+            case "attack":
+              newCombination.attackRerolls = finalCombination;
+              break;
+
+            case "defense":
+              newCombination.defenseRerolls = finalCombination;
+              break;
+              
+            default:
+              return finalCombinations;
+          }
         });
-        //Fix for empty rerolls
+
         if(rerollCombinations.length == 0) {
-          let finalCombination = Array.from(combination);
-          finalCombinations.push(finalCombination);
+          let newCombination = combination.copy();
+          finalCombinations.push(newCombination);
         }
       });
       return finalCombinations;
@@ -306,27 +344,97 @@
       return expectedDamage;
     }
 
-    function calculateProbabilitiesByDamage(basicDiceAmount, defenseDiceAmount, finalCombinations, successfulRollProbability) {
+    function calculateProbabilitiesByDamage(finalCombinations, successfulRollProbability) {
       //PART 3 - Calculate probabilities
+      let basicDiceAmount = 0;
+      if(finalCombinations.length > 0) {
+        basicDiceAmount = finalCombinations[0].attack.length;
+      } else {
+        return [];
+      }
       let probabilitiesByDamage = new Array(basicDiceAmount+1);
       //fill array with 1
       probabilitiesByDamage.fill(0, 0, basicDiceAmount+1);
       finalCombinations.forEach(combination => {
         console.log(combination);
-        let attackCombination = combination.slice(0,basicDiceAmount);
-        let defenseCombination = combination.slice(basicDiceAmount);
-        let damage = countDamage(attackCombination, successfulRollProbability);
-        let defense = countDamage(defenseCombination, 0.33);
-        let probability = 1;
-        combination.forEach(dieResult => {
-          probability = probability * dieResult;
-        });
-        //probability = probability.toFixed(2);
-        probabilitiesByDamage[damage-defense] += probability;
+        let damage = combination.countDamage(successfulRollProbability, 0.33);
+        let probability = combination.calculateProbability();
+        probabilitiesByDamage[damage] += probability;
         console.log(probability);
       });
       console.log(probabilitiesByDamage);
       return probabilitiesByDamage;
+    }
+
+    class Combination {
+      attack = [];
+      attackRerolls = [];
+      defense = [];
+      defenseRerolls = [];
+
+      countDamage(successfulAttackProbability, successfulDefenseProbability) {
+        let damage = 0;
+        this.attack.forEach(element => {
+          if(element == successfulAttackProbability) {
+            damage++;
+          }
+        });
+        this.attackRerolls.forEach(element => {
+          if(element == successfulAttackProbability) {
+            damage++;
+          }
+        });
+        this.defense.forEach(element => {
+          if(element == successfulDefenseProbability) {
+            damage--;
+          }
+        });
+        this.defenseRerolls.forEach(element => {
+          if(element == successfulDefenseProbability) {
+            damage--;
+          }
+        });
+        if(damage < 0) {
+          return 0;
+        } else {
+          return damage;
+        }
+      }
+   
+      calculateProbability() {
+        let probability = 1;
+        let calculated = false;
+        this.attack.forEach(element => {
+          probability = probability*element;
+          calculated = true;
+        });
+        this.attackRerolls.forEach(element => {
+          probability = probability*element;
+          calculated = true;
+        });
+        this.defense.forEach(element => {
+          probability = probability*element;
+          calculated = true;
+        });
+        this.defenseRerolls.forEach(element => {
+          probability = probability*element;
+          calculated = true;
+        });
+        if(calculated) {
+          return probability;
+        } else {
+          return 0;
+        }
+      }
+    
+      copy() {
+        let object = new Combination();
+        object.attack = Array.from(this.attack);
+        object.attackRerolls = Array.from(this.attackRerolls);
+        object.defense = Array.from(this.defense);
+        object.defenseRerolls = Array.from(this.defenseRerolls);
+        return object;
+      }
     }
   </script>
 
